@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pu.mapper.JobMapper">
+
+    <update id="updateJob">
+        update job
+        <set>
+            <if test="name!='' and name!=null">name=#{name},</if>
+            <if test="description!='' and description!=null">description=#{description},</if>
+            <if test="location!='' and location!=null">location=#{location},</if>
+            <if test="salaryMin!=null">salary_min=#{salaryMin},</if>
+            <if test="salaryMax!=null">salary_max=#{salaryMax},</if>
+            <if test="status!=null">status=#{status},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+        <where>
+            id=#{id} and company_id = #{companyId}
+        </where>
+    </update>
+
+    <delete id="deleteJobById">
+        delete from job where id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="findAll" resultType="com.pu.epojo.Job">
+        select * from job
+        <where>
+            status=1
+            <if test="name!=null and name!=''">and name like concat('%',#{name},'%')</if>
+        </where>
+        order by create_time desc
+    </select>
+</mapper>
