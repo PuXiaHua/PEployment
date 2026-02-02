@@ -9,4 +9,6 @@ public interface UserService {
     User login(User user);
 
     void registy(User user);
+
+    User getUserById(Long id);
 }
