@@ -1,4 +1,4 @@
-package com.pu.common.enums;
+package com.pu.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

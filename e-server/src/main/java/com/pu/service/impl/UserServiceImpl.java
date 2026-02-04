@@ -1,7 +1,6 @@
 package com.pu.service.impl;
 
-import com.pu.common.enums.AccountStatus;
-import com.pu.common.enums.UserRole;
+import com.pu.enums.AccountStatus;
 import com.pu.epojo.User;
 import com.pu.mapper.UserMapper;
 import com.pu.service.UserService;

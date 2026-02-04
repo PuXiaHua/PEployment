@@ -1,13 +1,14 @@
-package com.pu.common.enums;
+package com.pu.enums;
 
 import lombok.Getter;
 
 public enum CandidateStatus {
-    INIT(0, "已投递"),
-    RESUME_PASS(1, "简历通过"),
-    INTERVIEW(2, "面试中"),
-    OFFER(3, "已发 Offer"),
-    REJECT(4, "已淘汰");
+    INIT(1, "投递中"),
+    REJECT(2, "已淘汰"),
+    PASS(3, "通过"),
+    CANCEL(4, "撤销"),
+    EXHAUST(5, "重投次数耗尽");
+
     @Getter
     private Integer code;
     private String desc;

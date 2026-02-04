@@ -2,12 +2,16 @@ package com.pu.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+
+import com.pu.context.UserContext;
 import com.pu.epojo.Job;
 import com.pu.epojo.JobQueryParam;
 import com.pu.epojo.PageResult;
 import com.pu.epojo.User;
+import com.pu.exception.BizException;
 import com.pu.mapper.JobMapper;
 import com.pu.service.JobService;
+import com.pu.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,8 +39,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void addJob(Job job) {
-        //todo 拦截器threadlocal存用户身份 校验用户权限 公司权限才允许发布岗位
-        //if ()
+        AuthUtils.requireCompany();
         job.setCreateTime(LocalDateTime.now());
         job.setUpdateTime(LocalDateTime.now());
         jobMapper.addJob(job);
@@ -47,13 +50,13 @@ public class JobServiceImpl implements JobService {
         if (ids == null || ids.length == 0) {
             return;
         }
-        //todo 拦截器threadlocal存用户身份 校验用户权限 公司权限才允许发布岗位
+        AuthUtils.requireCompany();
         jobMapper.deleteJobById(ids);
     }
 
     @Override
     public void updatejob(Job job) {
-        //todo 拦截器threadlocal存用户身份 校验用户权限 公司权限才允许发布岗位
+        AuthUtils.requireCompany();
         job.setUpdateTime(LocalDateTime.now());
         jobMapper.updateJob(job);
     }
