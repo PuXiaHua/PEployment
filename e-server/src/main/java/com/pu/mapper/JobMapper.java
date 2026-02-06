@@ -23,4 +23,7 @@ public interface JobMapper {
     void deleteJobById(Long[] ids);
 
     void updateJob(Job job);
+
+    @Select("select * from job where company_id=#{companyId}")
+    List<Job> getMyPublishJob(Long companyId);
 }

@@ -13,4 +13,10 @@ public interface ApplyService {
     void cancelApply(Long id);
 
     PageResult<ApplicationDTO> getApplyList();
+
+    PageResult<ApplicationDTO> getCompanyApply();
+
+    void rejectApply(Long id);
+
+    void passApply(Long id);
 }

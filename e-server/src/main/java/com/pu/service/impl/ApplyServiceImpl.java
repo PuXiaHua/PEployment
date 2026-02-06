@@ -6,10 +6,14 @@ import com.pu.context.UserContext;
 import com.pu.edto.ApplicationDTO;
 import com.pu.enums.CandidateStatus;
 import com.pu.epojo.Application;
+import com.pu.epojo.Company;
+import com.pu.epojo.Job;
 import com.pu.epojo.PageResult;
 import com.pu.exception.BizException;
 import com.pu.mapper.ApplyMapper;
 import com.pu.service.ApplyService;
+import com.pu.service.CompanyService;
+import com.pu.service.JobService;
 import com.pu.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +26,8 @@ import java.util.List;
 public class ApplyServiceImpl implements ApplyService {
 
     private final ApplyMapper applyMapper;
+    private final CompanyService companyService;
+    private final JobService jobService;
 
     @Override
     public void addApply(Application application) {
@@ -29,16 +35,23 @@ public class ApplyServiceImpl implements ApplyService {
         Long userId = UserContext.getUser().getId();
         application.setUserId(userId);
         Application exist = applyMapper.getApplyByUserAndJob(userId, application.getJobId());
+        // 首次投递
         if (exist == null) {
             application.setCreateTime(LocalDateTime.now());
             application.setUpdateTime(LocalDateTime.now());
+            application.setCancelCount(0);
             application.setStatus(CandidateStatus.INIT.getCode());
             applyMapper.addApply(application);
             return;
         }
-        if (CandidateStatus.CANCEL.getCode().equals(exist.getStatus())) {
+        // 次数校验
+        if (exist.getCancelCount() >= 1) {
+            throw new BizException("撤销重投次数已用尽");
+        }
+        // 撤销后再次投递 第二次机会 回到INIT
+        if (exist.getStatus() == CandidateStatus.CANCEL.getCode()) {
             exist.setUpdateTime(LocalDateTime.now());
-            exist.setStatus(CandidateStatus.EXHAUST.getCode());
+            exist.setStatus(CandidateStatus.INIT.getCode());
             exist.setResumeSnapshot(application.getResumeSnapshot());
             applyMapper.updateStatus(exist);
             return;
@@ -46,16 +59,22 @@ public class ApplyServiceImpl implements ApplyService {
         throw new BizException("该岗位已投递，无法重复投递");
     }
 
-    public void cancelApply(Long Id) {
+    public void cancelApply(Long id) {
         AuthUtils.requireJobSeeker();
-        Application exist = applyMapper.getApplyById(Id);
+        Application exist = applyMapper.getById(id);
         if (exist == null) {
             throw new BizException("未投递该岗位，无法撤销");
         }
         if (exist.getStatus() != CandidateStatus.INIT.getCode()) {
             throw new BizException("当前状态不可撤销");
         }
-        exist.setStatus(CandidateStatus.CANCEL.getCode());
+        // 已经撤销过一次 INIT -> CANCEL -> INIT -> CANCEL -> EXHAUST
+        if (exist.getCancelCount() >= 1) {
+            exist.setStatus(CandidateStatus.EXHAUST.getCode());
+        } else {
+            exist.setStatus(CandidateStatus.CANCEL.getCode());
+            exist.setCancelCount(exist.getCancelCount() + 1);
+        }
         exist.setUpdateTime(LocalDateTime.now());
         applyMapper.updateStatus(exist);
     }
@@ -64,7 +83,58 @@ public class ApplyServiceImpl implements ApplyService {
     public PageResult<ApplicationDTO> getApplyList() {
         PageHelper.startPage(1, 10);
         List<ApplicationDTO> applicationDTOList = applyMapper.getApplyByUserId(UserContext.getUser().getId());
-        Page page=(Page) applicationDTOList;
-        return new PageResult<>(page.getTotal(),page.getResult());
+        Page page = (Page) applicationDTOList;
+        return new PageResult<>(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    public PageResult<ApplicationDTO> getCompanyApply() {
+        AuthUtils.requireCompany();
+        Company companyDB = companyService.getCompanyInfoByUserId();
+        if (companyDB == null) {
+            throw new BizException("当前企业尚未创建公司");
+        }
+        PageHelper.startPage(1, 10);
+        List<ApplicationDTO> applicationDTOList = applyMapper.getApplyByCompanyId(companyDB.getId());
+        Page page = (Page) applicationDTOList;
+        return new PageResult<>(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    public void rejectApply(Long id) {
+        Application app = applyMapper.getById(id);
+        if (app == null) {
+            throw new BizException("申请不存在");
+        }
+        if (!CandidateStatus.INIT.getCode().equals(app.getStatus())) {
+            throw new BizException("该申请已被处理，无法重复操作");
+        }
+        //注意权限校验 是不是公司 是不是当前公司的岗位
+        AuthUtils.requireCompany();
+        Company company = companyService.getCompanyInfoByUserId();
+        Job job = jobService.getJobById(app.getJobId());
+        if (!job.getCompanyId().equals(company.getId())) {
+            throw new BizException("无权处理该岗位的申请");
+        }
+        applyMapper.rejectApply(id);
+    }
+
+    @Override
+    public void passApply(Long id) {
+        Application app = applyMapper.getById(id);
+        if (app == null) {
+            throw new BizException("申请不存在");
+        }
+        if (!CandidateStatus.INIT.getCode().equals(app.getStatus())) {
+            throw new BizException("该申请已被处理，无法重复操作");
+        }
+        AuthUtils.requireCompany();
+        Company company = companyService.getCompanyInfoByUserId();
+        Job job = jobService.getJobById(app.getJobId());
+        if (!job.getCompanyId().equals(company.getId())) {
+            throw new BizException("无权处理该岗位的申请");
+        }
+        AuthUtils.requireCompany();
+        applyMapper.passApply(id);
     }
 }

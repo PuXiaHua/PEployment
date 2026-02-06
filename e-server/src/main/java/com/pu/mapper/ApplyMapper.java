@@ -28,4 +28,16 @@ public interface ApplyMapper {
 
     @Select("select * from application where id=#{id}")
     Application getApplyById(Long id);
+
+    @Select("select a.* from application a join job j on a.job_id = j.id where j.company_id = #{companyId} order by a.create_time desc")
+    List<ApplicationDTO> getApplyByCompanyId(Long companyId);
+
+    @Update("update application set status=2 where id=#{id}")
+    void rejectApply(Long id);
+
+    @Update("update application set status=3 where id=#{id}")
+    void passApply(Long id);
+
+    @Select("select * from application where id=#{id}")
+    Application getById(Long id);
 }

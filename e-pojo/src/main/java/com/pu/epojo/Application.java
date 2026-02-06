@@ -17,6 +17,7 @@ public class Application {
     Long jobId;
     String resumeSnapshot;
     Integer status;
+    Integer cancelCount;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

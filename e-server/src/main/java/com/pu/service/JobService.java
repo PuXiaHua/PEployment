@@ -15,4 +15,6 @@ public interface JobService {
     void deleteJob(Long[] ids);
 
     void updatejob(Job job);
+
+    PageResult<Job> getMyPublishJob();
 }

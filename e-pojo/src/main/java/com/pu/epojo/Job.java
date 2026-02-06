@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 public class Job {
     Long id;
-    String companyId;
+    Long companyId;
     String name;
     String description;
     String companyEmail;
