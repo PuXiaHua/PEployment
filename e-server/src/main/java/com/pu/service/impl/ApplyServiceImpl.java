@@ -44,10 +44,6 @@ public class ApplyServiceImpl implements ApplyService {
             applyMapper.addApply(application);
             return;
         }
-        // 次数校验
-        if (exist.getCancelCount() >= 1) {
-            throw new BizException("撤销重投次数已用尽");
-        }
         // 撤销后再次投递 第二次机会 回到INIT
         if (exist.getStatus() == CandidateStatus.CANCEL.getCode()) {
             exist.setUpdateTime(LocalDateTime.now());

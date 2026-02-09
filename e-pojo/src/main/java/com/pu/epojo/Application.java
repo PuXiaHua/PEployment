@@ -17,6 +17,7 @@ public class Application {
     Long jobId;
     String resumeSnapshot;
     Integer status;
+    //重投次数计数器 业务层用
     Integer cancelCount;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
