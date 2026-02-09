@@ -19,6 +19,7 @@ public class Job {
     Integer salaryMin;
     Integer salaryMax;
     Integer status;
+    String location;
     @DateTimeFormat
     LocalDateTime createTime;
     @DateTimeFormat

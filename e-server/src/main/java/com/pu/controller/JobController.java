@@ -29,7 +29,7 @@ public class JobController {
     @GetMapping("/{id}")
     public Result job(@PathVariable Long id) {
         log.info("查询了{}的信息",id);
-        return Result.success(jobServer.getJobById(id));
+        return Result.success(jobServer.getJobByIdWithCache(id));
     }
 
     //公司新发布岗位
@@ -48,7 +48,7 @@ public class JobController {
 
     @PutMapping
     public Result updateJob(@RequestBody Job job) {
-        jobServer.updatejob(job);
+        jobServer.updateJob(job);
         return Result.success();
     }
 

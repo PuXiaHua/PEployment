@@ -10,11 +10,13 @@ public interface JobService {
 
     Job getJobById(Long id);
 
+    Job getJobByIdWithCache(Long id);
+
     void addJob(Job job);
 
     void deleteJob(Long[] ids);
 
-    void updatejob(Job job);
+    void updateJob(Job job);
 
     PageResult<Job> getMyPublishJob();
 }
