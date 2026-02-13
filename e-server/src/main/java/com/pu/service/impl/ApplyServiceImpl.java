@@ -11,6 +11,8 @@ import com.pu.epojo.Job;
 import com.pu.epojo.PageResult;
 import com.pu.exception.BizException;
 import com.pu.mapper.ApplyMapper;
+import com.pu.message.*;
+import com.pu.mq.producer.ApplyProducer;
 import com.pu.service.ApplyService;
 import com.pu.service.CompanyService;
 import com.pu.service.JobService;
@@ -28,13 +30,15 @@ public class ApplyServiceImpl implements ApplyService {
     private final ApplyMapper applyMapper;
     private final CompanyService companyService;
     private final JobService jobService;
+    private final ApplyProducer applyProducer;
 
     @Override
     public void addApply(Application application) {
         AuthUtils.requireJobSeeker();
         Long userId = UserContext.getUser().getId();
+        Long jobId = application.getJobId();
         application.setUserId(userId);
-        Application exist = applyMapper.getApplyByUserAndJob(userId, application.getJobId());
+        Application exist = applyMapper.getApplyByUserAndJob(userId, jobId);
         // 首次投递
         if (exist == null) {
             application.setCreateTime(LocalDateTime.now());
@@ -42,6 +46,7 @@ public class ApplyServiceImpl implements ApplyService {
             application.setCancelCount(0);
             application.setStatus(CandidateStatus.INIT.getCode());
             applyMapper.addApply(application);
+            applyProducer.sendEvent(new ApplyEventMessage(application.getId(), userId, jobId, "CREATED", null, LocalDateTime.now()));
             return;
         }
         // 撤销后再次投递 第二次机会 回到INIT
@@ -50,6 +55,7 @@ public class ApplyServiceImpl implements ApplyService {
             exist.setStatus(CandidateStatus.INIT.getCode());
             exist.setResumeSnapshot(application.getResumeSnapshot());
             applyMapper.updateStatus(exist);
+            applyProducer.sendEvent(new ApplyEventMessage(application.getId(), userId, jobId, "CREATED", null, LocalDateTime.now()));
             return;
         }
         throw new BizException("该岗位已投递，无法重复投递");
@@ -73,6 +79,7 @@ public class ApplyServiceImpl implements ApplyService {
         }
         exist.setUpdateTime(LocalDateTime.now());
         applyMapper.updateStatus(exist);
+        applyProducer.sendEvent(new ApplyEventMessage(exist.getId(), UserContext.getUser().getId(), exist.getJobId(), "CANCELED", null, LocalDateTime.now()));
     }
 
     @Override
@@ -99,6 +106,8 @@ public class ApplyServiceImpl implements ApplyService {
     @Override
     public void rejectApply(Long id) {
         Application app = applyMapper.getById(id);
+        Long userId = app.getUserId();
+        Long jobId = app.getJobId();
         if (app == null) {
             throw new BizException("申请不存在");
         }
@@ -113,11 +122,15 @@ public class ApplyServiceImpl implements ApplyService {
             throw new BizException("无权处理该岗位的申请");
         }
         applyMapper.rejectApply(id);
+        applyProducer.sendEvent(new ApplyEventMessage(id, userId, jobId, "REJECTED", null, LocalDateTime.now()));
+        applyProducer.sendNotification(new ApplyEventMessage(id, userId, jobId, "REJECTED", null, LocalDateTime.now()));
     }
 
     @Override
     public void passApply(Long id) {
         Application app = applyMapper.getById(id);
+        Long userId = app.getUserId();
+        Long jobId = app.getJobId();
         if (app == null) {
             throw new BizException("申请不存在");
         }
@@ -132,5 +145,7 @@ public class ApplyServiceImpl implements ApplyService {
         }
         AuthUtils.requireCompany();
         applyMapper.passApply(id);
+        applyProducer.sendEvent(new ApplyEventMessage(id, userId, jobId, "PASSED", null, LocalDateTime.now()));
+        applyProducer.sendNotification(new ApplyEventMessage(id, userId, jobId, "PASSED", null, LocalDateTime.now()));
     }
 }
