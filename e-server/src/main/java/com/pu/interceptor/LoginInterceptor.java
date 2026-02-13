@@ -18,6 +18,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        //todo redis+session有状态的登录校验 强制踢人下线
         String userIdStr = request.getHeader("userId");
         if (userIdStr == null) {
             throw new BizException("未登录");

@@ -6,16 +6,13 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 
-import com.pu.context.UserContext;
 import com.pu.epojo.*;
-import com.pu.evo.JobVO;
 import com.pu.exception.BizException;
 import com.pu.mapper.JobMapper;
 import com.pu.service.CompanyService;
 import com.pu.service.JobService;
 import com.pu.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -26,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 
 @Service
 @RequiredArgsConstructor

@@ -3,12 +3,16 @@ package com.pu.controller;
 import com.pu.epojo.Job;
 import com.pu.epojo.JobQueryParam;
 import com.pu.epojo.Result;
+import com.pu.es.JobES;
+import com.pu.service.JobESService;
 import com.pu.service.JobService;
 import com.pu.service.UserService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -17,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class JobController {
 
     private final JobService jobServer;
-
+    private final JobESService jobESService;
     //用户一进来就该看见的岗位信息页面
     @GetMapping
     public Result jobList(JobQueryParam jobQueryParam) {
@@ -57,5 +61,11 @@ public class JobController {
     public Result getMyPublishJob() {
         log.info("查看自己公司发布的岗位");
         return Result.success(jobServer.getMyPublishJob());
+    }
+
+    //es搜索
+    @GetMapping("/search")
+    public List<JobES> search(@RequestParam String keyword) {
+        return jobESService.searchJobs(keyword);
     }
 }
